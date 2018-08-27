@@ -338,6 +338,57 @@ uint16_t DFRobot_ADS1115::readVoltage(uint8_t channel)
     return Voltage;
 }
 /*
+ *Reads the conversion results, return the raw bit digit
+ *for a single-ended ADC reading from the specified channel
+ *Negative voltages cannot be applied to this circuit because the
+ *ADS1115 can only accept positive voltages
+ */
+uint16_t DFRobot_ADS1115::readbit(uint8_t channel)
+{
+    if (channel > 3)
+    {
+        return 0;
+    }
+    // Start with default values
+    uint16_t config =   ADS1115_REG_CONFIG_CQUE_NONE    |   // Disable the comparator (default val)
+                        ADS1115_REG_CONFIG_CLAT_NONLAT  |   // Non-latching (default val)
+                        ADS1115_REG_CONFIG_CPOL_ACTVLOW |   // Alert/Rdy active low   (default val)
+                        ADS1115_REG_CONFIG_CMODE_TRAD;      // Traditional comparator (default val)
+    // Set Operational status/single-shot conversion start
+    config |= ads_osmode;
+    // Set PGA/voltage range
+    config |= ads_gain;
+    // Set Device operating mode
+    config |= ads_mode;
+    // Set Data rate
+    config |= ads_rate;
+    // Set single-ended input channel
+    switch (channel)
+    {
+        case (0):
+            config |= ADS1115_REG_CONFIG_MUX_SINGLE_0;
+            break;
+        case (1):
+            config |= ADS1115_REG_CONFIG_MUX_SINGLE_1;
+            break;
+        case (2):
+            config |= ADS1115_REG_CONFIG_MUX_SINGLE_2;
+            break;
+        case (3):
+            config |= ADS1115_REG_CONFIG_MUX_SINGLE_3;
+            break;
+    }
+    // Write config register to the ADC
+    writeRegister(ads_i2cAddress, ADS1115_REG_POINTER_CONFIG, config);
+    // Wait for the conversion to complete
+    delay(ads_conversionDelay);
+    // Read the conversion results
+    // 16-bit unsigned results for the ADS1115
+    int16_t bit = 0;
+    bit = (int16_t)readRegister(ads_i2cAddress, ADS1115_REG_POINTER_CONVERT);
+    return bit;
+}
+/*
  *Sets up the comparator causing the ALERT/RDY pin to assert 
  *(go from high to low) when the ADC value exceeds the 
  *specified  upper or lower threshold

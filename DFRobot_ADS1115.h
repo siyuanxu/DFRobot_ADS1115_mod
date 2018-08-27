@@ -154,6 +154,7 @@ class DFRobot_ADS1115
         void init(void);
         bool checkADS1115();
         uint16_t readVoltage(uint8_t channel);
+        uint16_t readbit(uint8_t channel);
         int16_t ComparatorVoltage(uint8_t channel);
         int16_t getLastConversionResults();
         void setOSMode(eADSOSMode_t osmode);
